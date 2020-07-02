@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:12.0-alpine
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data/
+    restart: always
+    environment:
+      POSTGRES_USER: search-engine
+      POSTGRES_PASSWORD: search-engine
+      POSTGRES_DB: search-engine
+    networks:
+      - network-search-engine
+    ports:
+      - 54321:5432
+
+  search-engine:
+    build: .
+    command: uvicorn run:app --host 0.0.0.0 --port 8000
+    environment:
+      PG_HOST: postgres
+      PG_USER: search-engine
+      PG_DATABASE: search-engine
+      PG_PASSWORD: search-engine
+    depends_on:
+      - postgres
+    restart: always
+    networks:
+      - network-search-engine
+    ports:
+      - 8000:8000
+
+#volumes:
+#  postgres_data:
+
+networks:
+  network-search-engine:
