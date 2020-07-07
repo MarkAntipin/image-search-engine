@@ -5,7 +5,6 @@ from pathlib import Path
 class Config:
     BASE_DIR = Path(__file__).resolve().parent.parent
     FILES_DIR = Path(BASE_DIR, 'files')
-    FILES_DIR.mkdir(exist_ok=True)
 
     PG_CONFIG = {
         'host': os.environ.get('PG_HOST', 'localhost'),

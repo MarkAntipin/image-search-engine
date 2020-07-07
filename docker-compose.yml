@@ -3,8 +3,8 @@ version: '3'
 services:
   postgres:
     image: postgres:12.0-alpine
-#    volumes:
-#      - postgres_data:/var/lib/postgresql/data/
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
     restart: always
     environment:
       POSTGRES_USER: search-engine
@@ -17,7 +17,11 @@ services:
 
   search-engine:
     build: .
-    command: uvicorn run:app --host 0.0.0.0 --port 8000
+    command: uvicorn run:app --host 0.0.0.0 --port 8001 --reload
+    volumes:
+      - ${PWD}/app:/app
+      - ${PWD}/core:/core
+      - files_data:/files
     environment:
       PG_HOST: postgres
       PG_USER: search-engine
@@ -29,10 +33,11 @@ services:
     networks:
       - network-search-engine
     ports:
-      - 8000:8000
+      - 8001:8001
 
-#volumes:
-#  postgres_data:
+volumes:
+  postgres_data:
+  files_data:
 
 networks:
   network-search-engine:

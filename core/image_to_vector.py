@@ -17,11 +17,13 @@ class Img2Vec(Img2VecPytorch):
 
     @staticmethod
     def _create_pill(img_obj: BinaryIO):
-        return Image.open(img_obj)
+        return Image.open(img_obj).convert('RGB')
 
     def get_vector(self, img_obj: BinaryIO):
         image = self._create_pill(img_obj)
-        return self.get_vec(image)
+        vec = self.get_vec(image)
+        vec.resize((1, vec.size))
+        return vec
 
     def get_vectors(self, img_objects: List[BinaryIO]):
         images = [self._create_pill(img) for img in img_objects]
