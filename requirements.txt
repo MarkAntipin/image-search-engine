@@ -8,3 +8,4 @@ aiofiles
 ujson
 sqlalchemy
 psycopg2-binary
+hnswlib
