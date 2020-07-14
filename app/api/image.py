@@ -25,13 +25,13 @@ async def get_image(
 ):
     result = se.get_image_data(db=db, idx=id)
     if result is None:
-        return GeneralResponse(result=result, message=f'no such image id {id}', code=201)
+        return GeneralResponse(result=result, message=f'no such image with id: {id}', code=201)
     return FileResponse(
-        result.path,
-        filename=result.name,
-        media_type=result.content_type,
+        result['path'],
+        filename=result['name'],
+        media_type=result['content_type'],
         headers={
-            'Content-disposition': f'attachment; filename="{result.name.encode("utf8").decode("latin-1")}"'
+            'Content-disposition': f'attachment; filename="{result["name"].encode("utf8").decode("latin-1")}"'
         })
 
 
@@ -41,6 +41,8 @@ async def get_image_data(
     db: Session = Depends(get_db)
 ):
     result = se.get_image_data(db=db, idx=id)
+    if result is None:
+        return GeneralResponse(result=result, message=f'no such image with id: {id}', code=201)
     return GeneralResponse(result=result)
 
 
@@ -66,16 +68,27 @@ def add_image(
 
 @image_router.post('/search')
 async def search_image(
+    k: int,
     image: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     image_obj = image.file
-    result = se.search(db=db, image_obj=image_obj)
+    result = se.search(
+        db=db,
+        k=k,
+        image_obj=image_obj
+    )
+    if result is None:
+        return GeneralResponse(result=result, message=f'not enough images in index for such query', code=400)
+    return GeneralResponse(result=result)
 
-    return GeneralResponse(result=result, message='saved', code=201)
 
-
-# @image_router.delete('/delete/{uuid}')
-# async def delete_item(idx: int):
-#     image_id = await se.remove_from_index(idx)
-#     return GeneralResponse(result=image_id, message='deleted', code=201)
+@image_router.delete('/delete/{uuid}')
+async def delete_image(
+    id: int,
+    db: Session = Depends(get_db)
+):
+    image_id = se.remove_from_index(db=db, idx=id)
+    if image_id is None:
+        return GeneralResponse(result=image_id, message=f'no such image with id: {id}', code=201)
+    return GeneralResponse(result=image_id, message='deleted')

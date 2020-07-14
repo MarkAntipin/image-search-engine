@@ -1,14 +1,12 @@
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 
-from app.api.image import image_router
-from settings.config import Config
+from app.api import image_router, index_router
 
 
 def create_app():
     app = FastAPI()
 
-    app.include_router(prefix='/image', router=image_router, tags=['item'])
+    app.include_router(prefix='/image', router=image_router, tags=['image'])
+    app.include_router(prefix='/index', router=index_router, tags=['index'])
 
-    app.mount('/files', StaticFiles(directory=Config.FILES_DIR), name='files')
     return app

@@ -1,10 +1,10 @@
 from uuid import uuid4
 from pathlib import Path
-from typing import BinaryIO, Union, Dict
+from typing import BinaryIO, Union, Dict, List
 from shutil import copyfileobj
 from datetime import datetime as dt
 
-from fastapi.encoders import jsonable_encoder
+from app.database.engine import Session
 from app.database.models import Image as ImageModel
 from core.utils import get_content_type
 from settings.config import Config
@@ -39,11 +39,11 @@ class SearchEngine:
 
     def put_in_index(
             self,
-            db,
+            db: Session,
             image_obj: BinaryIO,
             image_name: Union[str, Path] = None,
             image_data: Dict = None
-    ):
+    ) -> int:
         # TODO: add atomic
         content_type, extension = get_content_type(image_obj, image_name)
         image_dir = Path(self.files_dir, dt.now().strftime("%Y-%m-%d"))
@@ -69,17 +69,19 @@ class SearchEngine:
         self.index.add_vector(vector, db_image.id)
         return db_image.id
 
-    def remove_from_index(self, idx):
-        # TODO: check it
-        # image = await ImageModel.get(id=idx)
-        # await image.delete()
-        # Path(image.path).unlink()
-        # self.index.delete_vector(idx)
-        # return image.id
-        pass
+    def remove_from_index(self, db: Session, idx: int):
+        # TODO: add atomic
+        db_image = db.query(ImageModel).filter(ImageModel.id == idx).first()
+        if db_image:
+            Path(db_image.path).unlink()
+            self.index.delete_vector(idx)
+            db.delete(db_image)
+            db.commit()
+            return db_image.id
+        return
 
     @staticmethod
-    def get_all_images_data(db):
+    def get_all_images_data(db: Session) -> List[dict]:
         result = [
             {
                 'id': image.id,
@@ -91,13 +93,45 @@ class SearchEngine:
         return result
 
     @staticmethod
-    def get_image_data(db, idx):
-        result = db.query(ImageModel).filter(ImageModel.id == idx).first()
-        return result.__dict__
+    def get_image_data(db: Session, idx: int) -> [Dict, None]:
+        image = db.query(ImageModel).filter(ImageModel.id == idx).first()
+        if image:
+            return {
+                'id': image.id,
+                'name': image.name,
+                'data': image.data,
+                'vector': image.vector,
+                'path': image.path,
+                'content_type': image.content_type
+            }
+        else:
+            return
 
-    def search(self, db, image_obj: BinaryIO):
+    def search(self, db: Session, k: int, image_obj: BinaryIO):
         vector = self.image_to_vec.get_vector(image_obj)
         vector.resize((1, vector.size))
-        labels, distances = self.index.search(vector, k=1)
+        try:
+            labels, distances = self.index.search(vector, k=k)
+        except RuntimeError:
+            return
+        labels_and_distances = {idx: dist for idx, dist in zip(labels[0], distances[0])}
 
-        return {'labels': labels.tolist(), 'distances': distances.tolist()}
+        result = [
+            {
+                'id': image.id,
+                'dist': float(labels_and_distances[image.id]),
+                'name': image.name,
+                'data': image.data,
+            }
+            for image in db.query(ImageModel).filter(ImageModel.id.in_(labels[0].tolist())).all()
+        ]
+
+        return result
+
+    def reindex(self):
+        # TODO: implement it
+        pass
+
+    def check_health(self):
+        # TODO: implement it
+        pass
