@@ -12,12 +12,13 @@ class Index(hnswlib.Index):
             ef_construction: int = 100,
             max_elements: int = 100000,
             space: str = 'cosine',
-            dim: int = 4096
+            dim: int = 4096,
+            ef: int = 300
     ):
         super().__init__(space, dim)
         self.init_index(M=m, ef_construction=ef_construction, max_elements=max_elements)
         self.__restore_index()
-        self.set_ef(300)
+        self.set_ef(ef)
 
     def add_vector(self, vector, idx):
         self.add_items(vector, ids=[idx])
@@ -28,7 +29,7 @@ class Index(hnswlib.Index):
     def delete_vector(self, idx):
         self.mark_deleted(idx)
 
-    def search(self, vector, k: int = 1):
+    def search(self, vector, k: int):
         labels, distances = self.knn_query(vector, k=k)
         return labels, distances
 
@@ -41,3 +42,6 @@ class Index(hnswlib.Index):
             vectors = np.array(vectors)
             indexes = np.array(indexes)
             self.add_vectors(vectors=vectors, indexes=indexes)
+
+    def get_ids(self):
+        return self.get_ids_list()

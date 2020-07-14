@@ -10,7 +10,7 @@ from app.database.engine import Session, get_db
 image_router = APIRouter()
 
 
-@image_router.get('/get/all')
+@image_router.get('/get/data/all')
 async def get_all_images(
     db: Session = Depends(get_db)
 ):

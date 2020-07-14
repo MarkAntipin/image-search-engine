@@ -22,7 +22,14 @@ class SearchEngine:
             ef_construction: int = 200,
             max_elements: int = 100000,
             space: str = 'cosine',
+            ef: int = 300
     ):
+        self.m = m
+        self.ef_construction = ef_construction
+        self.max_elements = max_elements
+        self.space = space
+        self.ef = ef
+
         self.image_to_vec = Img2Vec(
             layer=layer,
             model=model,
@@ -32,7 +39,8 @@ class SearchEngine:
             m=m,
             ef_construction=ef_construction,
             max_elements=max_elements,
-            space=space
+            space=space,
+            ef=ef
         )
         self.files_dir = Config.FILES_DIR
         self.files_dir.mkdir(exist_ok=True)
@@ -81,7 +89,7 @@ class SearchEngine:
         return
 
     @staticmethod
-    def get_all_images_data(db: Session) -> List[dict]:
+    def get_all_images_data(db: Session) -> List[Dict]:
         result = [
             {
                 'id': image.id,
@@ -107,7 +115,12 @@ class SearchEngine:
         else:
             return
 
-    def search(self, db: Session, k: int, image_obj: BinaryIO):
+    def search(
+            self,
+            db: Session,
+            k: int,
+            image_obj: BinaryIO
+    ) -> List[Dict]:
         vector = self.image_to_vec.get_vector(image_obj)
         vector.resize((1, vector.size))
         try:
@@ -128,10 +141,27 @@ class SearchEngine:
 
         return result
 
-    def reindex(self):
-        # TODO: implement it
-        pass
+    def reindex(self, max_elements: [int, None] = None):
+        # TODO: do in thread
+        self.index = Index(
+            m=self.m,
+            ef_construction=self.ef_construction,
+            max_elements=max_elements if max_elements else self.max_elements,
+            space=self.space,
+            ef=self.ef
+        )
 
-    def check_health(self):
-        # TODO: implement it
-        pass
+    def check_health(self, db: Session) -> bool:
+        is_healthy = True
+        index_list = self.index.get_ids()
+        images = [
+            Path(image.path).is_file()
+            for image in db.query(ImageModel).filter(ImageModel.id.in_(index_list)).all()
+        ]
+        if len(images) != len(images):
+            is_healthy = False
+
+        if any(images) is False:
+            is_healthy = False
+
+        return is_healthy
