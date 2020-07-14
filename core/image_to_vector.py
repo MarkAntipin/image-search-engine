@@ -21,9 +21,7 @@ class Img2Vec(Img2VecPytorch):
 
     def get_vector(self, img_obj: BinaryIO):
         image = self._create_pill(img_obj)
-        vec = self.get_vec(image)
-        vec.resize((1, vec.size))
-        return vec
+        return self.get_vec(image)
 
     def get_vectors(self, img_objects: List[BinaryIO]):
         images = [self._create_pill(img) for img in img_objects]

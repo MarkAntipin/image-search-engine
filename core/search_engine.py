@@ -4,6 +4,7 @@ from typing import BinaryIO, Union, Dict
 from shutil import copyfileobj
 from datetime import datetime as dt
 
+from fastapi.encoders import jsonable_encoder
 from app.database.models import Image as ImageModel
 from core.utils import get_content_type
 from settings.config import Config
@@ -16,29 +17,35 @@ class SearchEngine:
             self,
             layer: str = 'default',
             model: str = 'alexnet',
+            dim: int = 4096,
             m: int = 16,
             ef_construction: int = 200,
             max_elements: int = 100000,
             space: str = 'cosine',
-            dim: int = 4096
     ):
         self.image_to_vec = Img2Vec(
-            layer=layer, model=model, layer_output_size=dim
+            layer=layer,
+            model=model,
+            layer_output_size=dim
         )
         self.index = Index(
-            m=m, ef_construction=ef_construction, max_elements=max_elements, space=space, dim=dim
+            m=m,
+            ef_construction=ef_construction,
+            max_elements=max_elements,
+            space=space
         )
         self.files_dir = Config.FILES_DIR
         self.files_dir.mkdir(exist_ok=True)
 
-    async def put_in_index(
+    def put_in_index(
             self,
+            db,
             image_obj: BinaryIO,
             image_name: Union[str, Path] = None,
             image_data: Dict = None
     ):
+        # TODO: add atomic
         content_type, extension = get_content_type(image_obj, image_name)
-
         image_dir = Path(self.files_dir, dt.now().strftime("%Y-%m-%d"))
         image_dir.mkdir(exist_ok=True)
         image_path = Path(image_dir, str(uuid4())).with_suffix(f'.{extension}')
@@ -48,35 +55,49 @@ class SearchEngine:
 
         vector = self.image_to_vec.get_vector(image_obj)
 
-        image = await ImageModel.create(
+        db_image = ImageModel(
             name=image_name,
             content_type=content_type,
             path=image_path.as_posix(),
             vector=vector.tolist(),
-            image_data=image_data
+            data=image_data
         )
+        db.add(db_image)
+        db.commit()
+        db.refresh(db_image)
+        vector.resize((1, vector.size))
+        self.index.add_vector(vector, db_image.id)
+        return db_image.id
 
-        self.index.add_vector(vector, image.id)
-        return image.id
-
-    async def remove_from_index(self, idx):
-        image = await ImageModel.get(id=idx)
-        await image.delete()
-        Path(image.path).unlink()
-        self.index.delete_vector(idx)
-        return image.id
+    def remove_from_index(self, idx):
+        # TODO: check it
+        # image = await ImageModel.get(id=idx)
+        # await image.delete()
+        # Path(image.path).unlink()
+        # self.index.delete_vector(idx)
+        # return image.id
+        pass
 
     @staticmethod
-    async def get_all_images_data():
-        result = [i for i in await ImageModel.all()]
+    def get_all_images_data(db):
+        result = [
+            {
+                'id': image.id,
+                'name': image.name,
+                'data': image.data,
+            }
+            for image in db.query(ImageModel).all()
+        ]
         return result
 
     @staticmethod
-    async def get_image_data(idx):
-        result = await ImageModel.get(id=idx)
-        return result
+    def get_image_data(db, idx):
+        result = db.query(ImageModel).filter(ImageModel.id == idx).first()
+        return result.__dict__
 
-    def search(self, image_obj: BinaryIO):
+    def search(self, db, image_obj: BinaryIO):
         vector = self.image_to_vec.get_vector(image_obj)
+        vector.resize((1, vector.size))
         labels, distances = self.index.search(vector, k=1)
+
         return {'labels': labels.tolist(), 'distances': distances.tolist()}

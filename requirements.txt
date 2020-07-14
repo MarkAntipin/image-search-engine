@@ -1,0 +1,10 @@
+fastapi
+python-multipart
+python-dotenv
+uvicorn
+img2vec-pytorch
+filetype
+aiofiles
+ujson
+sqlalchemy
+psycopg2-binary

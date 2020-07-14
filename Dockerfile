@@ -10,5 +10,5 @@ COPY . .
 
 RUN --mount=type=cache,target=/root/.cache/pip \
         pip install fastapi python-multipart python-dotenv uvicorn \
-        hnswlib img2vec-pytorch tortoise-orm asyncpg filetype aiofiles \
-        ujson
+        hnswlib img2vec-pytorch filetype aiofiles \
+        ujson sqlalchemy psycopg2-binary

@@ -1,9 +1,14 @@
 import os
 from pathlib import Path
 
+import dotenv
+
 
 class Config:
     BASE_DIR = Path(__file__).resolve().parent.parent
+
+    dotenv.load_dotenv(Path(BASE_DIR, 'settings', 'env'))
+
     FILES_DIR = Path(BASE_DIR, 'files')
 
     PG_CONFIG = {
@@ -13,18 +18,7 @@ class Config:
         'database': os.environ.get('PG_DATABASE'),
         'password': os.environ.get('PG_PASSWORD'),
     }
-
-    DB_CONFIG = {
-        'connections': {
-            'default': {
-                'engine': 'tortoise.backends.asyncpg',
-                'credentials': {**PG_CONFIG},
-            }
-        },
-        'apps': {
-            'models': {
-                'models': ['app.database.models'],
-                'default_connection': 'default'
-            }
-        }
-    }
+    PG_URL = (
+        f"postgres://{PG_CONFIG['user']}:{PG_CONFIG['password']}"
+        f"@{PG_CONFIG['host']}:{PG_CONFIG['port']}/{PG_CONFIG['database']}"
+    )

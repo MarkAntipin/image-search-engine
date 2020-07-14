@@ -1,23 +1,24 @@
-from uuid import UUID
-from typing import Dict, List
+from datetime import datetime as dt
 
-from tortoise.models import Model
-from tortoise.fields import (
-    DatetimeField, IntField, CharField,
-    JSONField
+from sqlalchemy import (
+    Column, Integer, Float, String, JSON, DateTime
 )
+from sqlalchemy.dialects.postgresql import ARRAY
+
+from .engine import Base, engine
 
 
-class Image(Model):
-    id = IntField(pk=True)
-    name = CharField(max_length=128)
-    content_type = CharField(max_length=128)
-    path = CharField(max_length=256)
+class Image(Base):
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    content_type = Column(String)
+    path = Column(String)
+    data = Column(JSON)
+    vector = Column(ARRAY(Float))
 
-    data = JSONField(null=True)
-    vector = JSONField()
+    created_at = Column(DateTime, default=dt.utcnow)
 
-    created_at = DatetimeField(auto_now=True)
+    __tablename__ = 'images'
 
-    class Meta:
-        table = 'image'
+
+Base.metadata.create_all(bind=engine)
