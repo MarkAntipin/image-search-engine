@@ -12,6 +12,8 @@ services:
       POSTGRES_DB: search-engine
     networks:
       - network-search-engine
+    ports:
+      - 54321:5432
 
   search-engine:
     build: .

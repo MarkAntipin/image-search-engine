@@ -17,7 +17,7 @@ def get_image(
 ):
     result = se.get_image_data(db=db, idx=id)
     if result is None:
-        return GeneralResponse(result=result, message=f'no such image with id: {id}', code=201)
+        raise HTTPException(detail=f'no such image with id: {id}', status_code=404)
     return FileResponse(
         result['path'],
         filename=result['name'],
@@ -60,22 +60,22 @@ def search_image(
         image_obj=image_obj
     )
     if result is None:
-        return GeneralResponse(result=result, message=f'not enough images in index for such query', code=400)
+        raise HTTPException(detail=f'not enough images in index for such query', status_code=404)
     return GeneralResponse(result=result)
 
 
-@image_router.delete('/{uuid}')
+@image_router.delete('/{id}')
 def delete_image(
     id: int,
     db: Session = Depends(get_db)
 ):
     image_id = se.remove_from_index(db=db, idx=id)
     if image_id is None:
-        return GeneralResponse(result=image_id, message=f'no such image with id: {id}', code=201)
+        raise HTTPException(detail=f'no such image with id: {id}', status_code=404)
     return GeneralResponse(result=image_id, message='deleted')
 
 
-@image_router.delete('/{uuid}')
+@image_router.delete('/all/records')
 def delete_all_images(
     db: Session = Depends(get_db)
 ):

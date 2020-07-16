@@ -18,8 +18,5 @@ async def reindex():
 async def check_health(
     db: Session = Depends(get_db)
 ):
-    is_healthy = se.check_health(db=db)
-    message = 'everything is good'
-    if is_healthy is False:
-        message = 'something is wrong'
-    return GeneralResponse(result=is_healthy, message=message)
+    healthy_message, is_healthy = se.check_health(db=db)
+    return GeneralResponse(result=is_healthy, message=healthy_message)

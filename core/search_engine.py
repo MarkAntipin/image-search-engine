@@ -90,8 +90,8 @@ class SearchEngine:
         # TODO: add atomic
         num_rows_deleted = db.query(ImageModel).delete()
         db.commit()
-        rmtree(self.files_dir)
-        self.files_dir.mkdir(exist_ok=True)
+        for directory in self.files_dir.iterdir():
+            rmtree(directory)
         self.index = Index(
             m=self.m,
             ef_construction=self.ef_construction,
@@ -163,17 +163,24 @@ class SearchEngine:
             ef=self.ef
         )
 
-    def check_health(self, db: Session) -> bool:
+    def check_health(self, db: Session) -> (str, bool):
         is_healthy = True
+        healthy_message = 'everything is good'
+        error_messages = []
         index_list = self.index.get_ids()
         images = [
             Path(image.path).is_file()
             for image in db.query(ImageModel).filter(ImageModel.id.in_(index_list)).all()
         ]
-        if len(images) != len(images):
+        if len(images) != len(index_list):
             is_healthy = False
+            error_messages.append('database and index are not in consistency')
 
-        if any(images) is False:
-            is_healthy = False
+        if images:
+            if any(images) is False:
+                is_healthy = False
+                error_messages.append('database and files are not in consistency')
 
-        return is_healthy
+        if error_messages:
+            healthy_message = '\n'.join(error_messages)
+        return healthy_message, is_healthy
