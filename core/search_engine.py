@@ -1,7 +1,7 @@
 from uuid import uuid4
 from pathlib import Path
 from typing import BinaryIO, Union, Dict, List
-from shutil import copyfileobj
+from shutil import copyfileobj, rmtree
 from datetime import datetime as dt
 
 from app.database.engine import Session
@@ -51,7 +51,6 @@ class SearchEngine:
             content_type: str,
             image_obj: BinaryIO,
             image_name: Union[str, Path] = None,
-            image_data: Dict = None
     ) -> int:
         # TODO: add atomic
         image_dir = Path(self.files_dir, dt.now().strftime("%Y-%m-%d"))
@@ -86,6 +85,21 @@ class SearchEngine:
             db.commit()
             return db_image.id
         return
+
+    def delete_index(self, db: Session):
+        # TODO: add atomic
+        num_rows_deleted = db.query(ImageModel).delete()
+        db.commit()
+        rmtree(self.files_dir)
+        self.files_dir.mkdir(exist_ok=True)
+        self.index = Index(
+            m=self.m,
+            ef_construction=self.ef_construction,
+            max_elements=self.max_elements,
+            space=self.space,
+            ef=self.ef
+        )
+        return num_rows_deleted
 
     @staticmethod
     def get_all_images_data(db: Session) -> List[Dict]:

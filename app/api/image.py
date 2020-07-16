@@ -77,7 +77,7 @@ def delete_image(
 
 @image_router.delete('/{uuid}')
 def delete_all_images(
-    id: int,
     db: Session = Depends(get_db)
 ):
-    pass
+    num_rows_deleted = se.delete_index(db=db)
+    return GeneralResponse(result=num_rows_deleted, message=f'deleted {num_rows_deleted} records')
