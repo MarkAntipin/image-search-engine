@@ -11,7 +11,7 @@ index_router = APIRouter()
 @index_router.get('/reindex')
 async def reindex():
     se.reindex()
-    return GeneralResponse(result=None, message='reindex started')
+    return GeneralResponse(result=None, message='reindex finished')
 
 
 @index_router.get('/health')

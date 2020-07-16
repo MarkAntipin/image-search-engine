@@ -6,7 +6,6 @@ from datetime import datetime as dt
 
 from app.database.engine import Session
 from app.database.models import Image as ImageModel
-from core.utils import get_content_type
 from settings.config import Config
 from .image_to_vector import Img2Vec
 from .index import Index
@@ -48,12 +47,13 @@ class SearchEngine:
     def put_in_index(
             self,
             db: Session,
+            extension: str,
+            content_type: str,
             image_obj: BinaryIO,
             image_name: Union[str, Path] = None,
             image_data: Dict = None
     ) -> int:
         # TODO: add atomic
-        content_type, extension = get_content_type(image_obj, image_name)
         image_dir = Path(self.files_dir, dt.now().strftime("%Y-%m-%d"))
         image_dir.mkdir(exist_ok=True)
         image_path = Path(image_dir, str(uuid4())).with_suffix(f'.{extension}')
@@ -68,7 +68,6 @@ class SearchEngine:
             content_type=content_type,
             path=image_path.as_posix(),
             vector=vector.tolist(),
-            data=image_data
         )
         db.add(db_image)
         db.commit()
@@ -120,7 +119,7 @@ class SearchEngine:
             db: Session,
             k: int,
             image_obj: BinaryIO
-    ) -> List[Dict]:
+    ) -> [List[Dict], None]:
         vector = self.image_to_vec.get_vector(image_obj)
         vector.resize((1, vector.size))
         try:
@@ -138,11 +137,10 @@ class SearchEngine:
             }
             for image in db.query(ImageModel).filter(ImageModel.id.in_(labels[0].tolist())).all()
         ]
-
+        result.sort(key=lambda k: k['dist'])
         return result
 
     def reindex(self, max_elements: [int, None] = None):
-        # TODO: do in thread
         self.index = Index(
             m=self.m,
             ef_construction=self.ef_construction,

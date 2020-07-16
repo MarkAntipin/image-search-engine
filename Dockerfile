@@ -7,6 +7,6 @@ RUN apt-get -y update && apt-get -y upgrade && apt-get install -y g++ \
 COPY . .
 
 RUN --mount=type=cache,target=/root/.cache/pip \
-        pip install fastapi python-multipart python-dotenv uvicorn \
-        hnswlib img2vec-pytorch filetype aiofiles \
-        ujson sqlalchemy psycopg2-binary
+        pip install -r requirements.txt
+
+CMD ["uvicorn", "run:app", "--host", "0.0.0.0", "--port", "8001"]
