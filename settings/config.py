@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import dotenv
+from fastapi.security import OAuth2PasswordBearer
 
 
 class Config:
@@ -10,6 +11,10 @@ class Config:
     dotenv.load_dotenv(Path(BASE_DIR, 'settings', 'env'))
 
     FILES_DIR = Path(BASE_DIR, 'files')
+
+    ALLOWED_CONTENT_TYPES = {
+        ''
+    }
 
     PG_CONFIG = {
         'host': os.environ.get('PG_HOST', 'localhost'),
@@ -22,3 +27,5 @@ class Config:
         f"postgres://{PG_CONFIG['user']}:{PG_CONFIG['password']}"
         f"@{PG_CONFIG['host']}:{PG_CONFIG['port']}/{PG_CONFIG['database']}"
     )
+
+    oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

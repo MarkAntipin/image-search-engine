@@ -9,16 +9,14 @@ index_router = APIRouter()
 
 
 @index_router.get('/reindex')
-async def reindex(
-    db: Session = Depends(get_db)
-):
-    se.reindex(db=db)
-    return GeneralResponse(result=None, message='reindex started')
+async def reindex():
+    se.reindex()
+    return GeneralResponse(result=None, message='reindex finished')
 
 
 @index_router.get('/health')
 async def check_health(
     db: Session = Depends(get_db)
 ):
-    result = se.check_health(db=db)
-    return GeneralResponse(result=result)
+    healthy_message, is_healthy = se.check_health(db=db)
+    return GeneralResponse(result=is_healthy, message=healthy_message)
