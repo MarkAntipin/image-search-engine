@@ -2,8 +2,11 @@
 
 ### What is it?
 It is a search similar engine for images.
-![Alt text](https://raw.githubusercontent.com/MarkAntipin/image-search-engine/master/readme_images/search.png)
+![Alt text](https://raw.githubusercontent.com/MarkAntipin/image-search-engine/master/readme_images/dogs_1.png)
+![Alt text](https://raw.githubusercontent.com/MarkAntipin/image-search-engine/master/readme_images/dogs_2.png)
 
+This web application allows you to add and remove images from the index while maintaining data consistency.
+ When the application starts again, the entire previous index is saved.This web application allows you to add and remove images from the index while maintaining data consistency. When the application starts again, the entire previous index is saved.
 
 ### Used technologies
 

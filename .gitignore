@@ -149,7 +149,6 @@ pyvenv.cfg
 .venv
 pip-selfcheck.json
 .idea
-settings/env
 files/
 .DS_Store
 data
