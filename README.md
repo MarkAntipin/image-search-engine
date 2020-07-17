@@ -1,7 +1,7 @@
 # image-search-engine
 
 ### What is it?
-It is a search engine for images.
+It is a search similar engine for images.
 ![Alt text](https://raw.githubusercontent.com/MarkAntipin/image-search-engine/master/readme_images/search.png)
 
 
