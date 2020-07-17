@@ -2,23 +2,27 @@
 
 ### What is it?
 It is a search engine for images.
-
+![Alt text](https://raw.githubusercontent.com/MarkAntipin/image-search-engine/master/readme_images/search.png)
 
 
 ### Used technologies
 
-* `hnswlib` - 
-* `postgeSQL` - 
-* `FastApi` - 
+* `hnswlib` - index engine for quick similarity search (https://github.com/nmslib/hnswlibhttps://github.com/nmslib/hnswlib)
+* `postgeSQL` - to store all additional information about the image
+* `img2vec_pytorch` - wrapper around Alexnet for image feature extraction (https://github.com/christiansafka/img2vechttps://github.com/christiansafka/img2vec)
 
 
 ### Deployment
+#### Docker
 ```bash
 docker-compose build
 docker-compose up
 ```
 
-or without docker
+#### Without Docker
+requirements: gcc and postgeSQL, also specify `PG_USER`, `PG_DATABASE`, `PG_PASSWORD` params in `settings/env` file
+
+
 ```bash
 virtualenv venv --python=python3.6
 source venv/bin/activate 
@@ -30,6 +34,9 @@ App will be available on 0.0.0.0:8001 in both cases
 
 
 ### Api Description
+All handlers are available on 0.0.0.0:8001/docs
+
+#### Image
 * `GET /image/{id}` download image by id
 ```curl
 curl -X GET "http://0.0.0.0:8001/image/{id}" --output {output_file_name}
@@ -40,7 +47,39 @@ curl -X GET "http://0.0.0.0:8001/image/{id}" --output {output_file_name}
 curl -X DELETE "http://0.0.0.0:8001/image/{id}"
 ```
 
-* `POST /image/add` add image n index
+* `POST /image/add` add image to index
 ```curl
+curl -X POST "http://0.0.0.0:8001/image/add" -H "Content-Type: multipart/form-data" -F "image=@{image_path};type=image/jpeg"
+```
 
+* `POST /image/search?k={k}` search k nearest images
+```curl
+curl -X POST "http://0.0.0.0:8001/image/search?k={k}" -H "Content-Type: multipart/form-data" -F "image=@{image_path};type=image/jpeg"
+```
+
+* `DELETE /image/all/records` delete all images from search-engine
+```curl
+curl -X DELETE "http://0.0.0.0:8001/image/all/records"
+```
+
+#### Index
+* `GET /index/reindex` rebuild index (only use if it is broken)
+```curl
+curl -X GET "http://0.0.0.0:8001/index/reindex"
+```
+
+* `GET /index/health` check if index is broken
+```curl
+curl -X GET "http://0.0.0.0:8001/index/health"
+```
+
+#### Data
+* `GET /data/{id}` get data for image by id (vector and some additional info)
+```curl
+curl -X GET "http://0.0.0.0:8001/data/{id}"
+```
+
+* `POST /data/{id}` add additional info for image by id
+```curl
+curl -X POST "http://0.0.0.0:8001/data/12345" -H "Content-Type: application/json" -d "{\"image_data\":{some data in json}}"
 ```
