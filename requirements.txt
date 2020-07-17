@@ -9,3 +9,4 @@ ujson
 sqlalchemy
 psycopg2-binary
 hnswlib
+requests

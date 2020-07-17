@@ -13,9 +13,11 @@ class Config:
     FILES_DIR = Path(BASE_DIR, 'files')
 
     ALLOWED_CONTENT_TYPES = {
-        ''
+        'image/jpeg',
+        'image/bmp',
+        'image/tiff',
+        'image/gif',
     }
-
     PG_CONFIG = {
         'host': os.environ.get('PG_HOST', 'localhost'),
         'port': int(os.environ.get('PG_PORT', 5432)),

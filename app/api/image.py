@@ -32,6 +32,8 @@ def add_image(
     image: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
+    if se.is_indexing:
+        raise HTTPException(status_code=400, detail='indexing in progress')
     image_obj = image.file
     image_name = image.filename
     content_type, extension = get_content_type(image_obj, image_name)
@@ -53,6 +55,8 @@ def search_image(
     image: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
+    if se.is_indexing:
+        raise HTTPException(status_code=400, detail='indexing in progress')
     image_obj = image.file
     result = se.search(
         db=db,
@@ -69,6 +73,8 @@ def delete_image(
     id: int,
     db: Session = Depends(get_db)
 ):
+    if se.is_indexing:
+        raise HTTPException(status_code=400, detail='indexing in progress')
     image_id = se.remove_from_index(db=db, idx=id)
     if image_id is None:
         raise HTTPException(detail=f'no such image with id: {id}', status_code=404)
@@ -79,5 +85,7 @@ def delete_image(
 def delete_all_images(
     db: Session = Depends(get_db)
 ):
+    if se.is_indexing:
+        raise HTTPException(status_code=400, detail='indexing in progress')
     num_rows_deleted = se.delete_index(db=db)
     return GeneralResponse(result=num_rows_deleted, message=f'deleted {num_rows_deleted} records')

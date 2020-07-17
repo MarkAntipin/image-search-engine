@@ -14,16 +14,8 @@ class AddData(BaseModel):
     image_data: dict
 
 
-@data_router.get('/all')
-def get_all_images_data(
-    db: Session = Depends(get_db)
-):
-    result = se.get_all_images_data(db=db)
-    return GeneralResponse(result=result)
-
-
 @data_router.get('/{id}')
-def get_image_data(
+def get_data(
     id: int,
     db: Session = Depends(get_db)
 ):
