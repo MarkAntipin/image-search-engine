@@ -7,9 +7,9 @@ It is a search similar engine for images.
 
 ### Used technologies
 
-* `hnswlib` - index engine for quick similarity search (https://github.com/nmslib/hnswlibhttps://github.com/nmslib/hnswlib)
+* `hnswlib` - index engine for quick similarity search (https://github.com/nmslib/hnswlib)
 * `postgeSQL` - to store all additional information about the image
-* `img2vec_pytorch` - wrapper around Alexnet for image feature extraction (https://github.com/christiansafka/img2vechttps://github.com/christiansafka/img2vec)
+* `img2vec_pytorch` - wrapper around Alexnet for image feature extraction (https://github.com/christiansafka/img2vec)
 
 
 ### Deployment
