@@ -23,6 +23,7 @@ class SearchEngine:
             space: str = 'cosine',
             ef: int = 300
     ):
+        self.__is_indexing = False
         self.m = m
         self.ef_construction = ef_construction
         self.max_elements = max_elements
@@ -34,15 +35,9 @@ class SearchEngine:
             model=model,
             layer_output_size=dim
         )
-        self.index = Index(
-            m=m,
-            ef_construction=ef_construction,
-            max_elements=max_elements,
-            space=space,
-            ef=ef
-        )
         self.files_dir = Config.FILES_DIR
         self.files_dir.mkdir(exist_ok=True)
+        self.index = None
 
     def put_in_index(
             self,
@@ -75,7 +70,7 @@ class SearchEngine:
         self.index.add_vector(vector, db_image.id)
         return db_image.id
 
-    def remove_from_index(self, db: Session, idx: int):
+    def remove_from_index(self, db: Session, idx: int) -> [int, None]:
         # TODO: add atomic
         db_image = db.query(ImageModel).filter(ImageModel.id == idx).first()
         if db_image:
@@ -155,6 +150,8 @@ class SearchEngine:
         return result
 
     def reindex(self, max_elements: [int, None] = None):
+        self.__is_indexing = True
+        print('Indexing!!!')
         self.index = Index(
             m=self.m,
             ef_construction=self.ef_construction,
@@ -162,6 +159,8 @@ class SearchEngine:
             space=self.space,
             ef=self.ef
         )
+        print('Indexing finished!!!')
+        self.__is_indexing = False
 
     def check_health(self, db: Session) -> (str, bool):
         is_healthy = True
@@ -184,3 +183,7 @@ class SearchEngine:
         if error_messages:
             healthy_message = '\n'.join(error_messages)
         return healthy_message, is_healthy
+
+    @property
+    def is_indexing(self):
+        return self.__is_indexing
