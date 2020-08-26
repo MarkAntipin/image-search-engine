@@ -19,7 +19,7 @@ class SearchEngine:
             dim: int = 4096,
             m: int = 16,
             ef_construction: int = 200,
-            max_elements: int = 100000,
+            max_elements: int = 1000000,
             space: str = 'cosine',
             ef: int = 300
     ):

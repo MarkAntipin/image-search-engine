@@ -14,6 +14,8 @@ class Config:
 
     ALLOWED_CONTENT_TYPES = {
         'image/jpeg',
+        'image/png',
+        'image/jpg',
         'image/bmp',
         'image/tiff',
         'image/gif',
