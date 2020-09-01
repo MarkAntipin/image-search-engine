@@ -11,10 +11,7 @@ image_router = APIRouter()
 
 
 @image_router.get('/{id}')
-def get_image(
-    id: int,
-    db: Session = Depends(get_db)
-):
+def get_image(id: int):
     result = se.get_image_data(db=db, idx=id)
     if result is None:
         raise HTTPException(detail=f'no such image with id: {id}', status_code=404)
@@ -30,7 +27,6 @@ def get_image(
 @image_router.post('/add')
 def add_image(
     image: UploadFile = File(...),
-    db: Session = Depends(get_db)
 ):
     if se.is_indexing:
         raise HTTPException(status_code=400, detail='indexing in progress')
@@ -71,7 +67,6 @@ def search_image(
 @image_router.delete('/{id}')
 def delete_image(
     id: int,
-    db: Session = Depends(get_db)
 ):
     if se.is_indexing:
         raise HTTPException(status_code=400, detail='indexing in progress')

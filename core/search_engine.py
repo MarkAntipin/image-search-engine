@@ -8,7 +8,6 @@ from app.database.engine import Session
 from app.database.models import Image as ImageModel
 from settings.config import Config
 from .image_to_vector import Img2Vec
-from .index import Index
 
 
 class SearchEngine:
@@ -17,19 +16,7 @@ class SearchEngine:
             layer: str = 'default',
             model: str = 'alexnet',
             dim: int = 4096,
-            m: int = 16,
-            ef_construction: int = 200,
-            max_elements: int = 1000000,
-            space: str = 'cosine',
-            ef: int = 300
     ):
-        self.__is_indexing = False
-        self.m = m
-        self.ef_construction = ef_construction
-        self.max_elements = max_elements
-        self.space = space
-        self.ef = ef
-
         self.image_to_vec = Img2Vec(
             layer=layer,
             model=model,
@@ -39,6 +26,24 @@ class SearchEngine:
         self.files_dir.mkdir(exist_ok=True)
         self.index = None
 
+    def add(self):
+        pass
+
+    def add_bulk(self):
+        pass
+
+    def add_data(self):
+        pass
+
+    def add_data_bulk(self):
+        pass
+
+    def delete(self):
+        pass
+
+    def search(self):
+        pass
+
     def put_in_index(
             self,
             db: Session,
@@ -47,7 +52,6 @@ class SearchEngine:
             image_obj: BinaryIO,
             image_name: Union[str, Path] = None,
     ) -> int:
-        # TODO: add atomic
         image_dir = Path(self.files_dir, dt.now().strftime("%Y-%m-%d"))
         image_dir.mkdir(exist_ok=True)
         image_path = Path(image_dir, str(uuid4())).with_suffix(f'.{extension}')
@@ -129,61 +133,4 @@ class SearchEngine:
             k: int,
             image_obj: BinaryIO
     ) -> [List[Dict], None]:
-        vector = self.image_to_vec.get_vector(image_obj)
-        vector.resize((1, vector.size))
-        try:
-            labels, distances = self.index.search(vector, k=k)
-        except RuntimeError:
-            return
-        labels_and_distances = {idx: dist for idx, dist in zip(labels[0], distances[0])}
-
-        result = [
-            {
-                'id': image.id,
-                'dist': float(labels_and_distances[image.id]),
-                'name': image.name,
-                'data': image.data,
-            }
-            for image in db.query(ImageModel).filter(ImageModel.id.in_(labels[0].tolist())).all()
-        ]
-        result.sort(key=lambda k: k['dist'])
-        return result
-
-    def reindex(self, max_elements: [int, None] = None):
-        self.__is_indexing = True
-        print('Indexing!!!')
-        self.index = Index(
-            m=self.m,
-            ef_construction=self.ef_construction,
-            max_elements=max_elements if max_elements else self.max_elements,
-            space=self.space,
-            ef=self.ef
-        )
-        print('Indexing finished!!!')
-        self.__is_indexing = False
-
-    def check_health(self, db: Session) -> (str, bool):
-        is_healthy = True
-        healthy_message = 'everything is good'
-        error_messages = []
-        index_list = self.index.get_ids()
-        images = [
-            Path(image.path).is_file()
-            for image in db.query(ImageModel).filter(ImageModel.id.in_(index_list)).all()
-        ]
-        if len(images) != len(index_list):
-            is_healthy = False
-            error_messages.append('database and index are not in consistency')
-
-        if images:
-            if any(images) is False:
-                is_healthy = False
-                error_messages.append('database and files are not in consistency')
-
-        if error_messages:
-            healthy_message = '\n'.join(error_messages)
-        return healthy_message, is_healthy
-
-    @property
-    def is_indexing(self):
-        return self.__is_indexing
+        pass
