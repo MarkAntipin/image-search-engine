@@ -11,7 +11,7 @@ image_router = APIRouter()
 
 @image_router.get('/{id}')
 def get_image(id: int):
-    result = se.get_image_data(db=db, idx=id)
+    result = se.get(idx=id)
     if result is None:
         raise HTTPException(detail=f'no such image with id: {id}', status_code=404)
     return FileResponse(
@@ -23,19 +23,24 @@ def get_image(id: int):
         })
 
 
+@image_router.delete('/{id}')
+def delete_image(id: int,):
+    image_id = se.delete(idx=id)
+    if image_id is None:
+        raise HTTPException(detail=f'no such image with id: {id}', status_code=404)
+    return GeneralResponse(result=image_id, message='deleted')
+
+
 @image_router.post('/add')
 def add_image(
     image: UploadFile = File(...),
 ):
-    if se.is_indexing:
-        raise HTTPException(status_code=400, detail='indexing in progress')
     image_obj = image.file
     image_name = image.filename
     content_type, extension = get_content_type(image_obj, image_name)
     if content_type not in Config.ALLOWED_CONTENT_TYPES:
         raise HTTPException(status_code=400, detail=f'not allowed content type {content_type}')
-    image_id = se.put_in_index(
-        db=db,
+    image_id = se.add(
         content_type=content_type,
         extension=extension,
         image_obj=image_obj,
@@ -60,18 +65,6 @@ def search_image(
     if result is None:
         raise HTTPException(detail=f'not enough images in index for such query', status_code=404)
     return GeneralResponse(result=result)
-
-
-@image_router.delete('/{id}')
-def delete_image(
-    id: int,
-):
-    if se.is_indexing:
-        raise HTTPException(status_code=400, detail='indexing in progress')
-    image_id = se.remove_from_index(db=db, idx=id)
-    if image_id is None:
-        raise HTTPException(detail=f'no such image with id: {id}', status_code=404)
-    return GeneralResponse(result=image_id, message='deleted')
 
 
 @image_router.delete('/all/records')

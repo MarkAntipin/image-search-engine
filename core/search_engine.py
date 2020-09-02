@@ -1,10 +1,13 @@
+import os
 from uuid import uuid4
 from pathlib import Path
 from typing import BinaryIO, Union, Dict, List
 from shutil import copyfileobj, rmtree
 from datetime import datetime as dt
 
-from app.database.models import Image as ImageModel
+from playhouse.shortcuts import model_to_dict
+
+from app.database.models import Image as ImageModel, db
 from settings.config import Config
 from .image_to_vector import Img2Vec
 
@@ -25,25 +28,14 @@ class SearchEngine:
         self.files_dir.mkdir(exist_ok=True)
         self.index = None
 
-    def add(self):
-        pass
+    def get(self, idx: int) -> [dict, None]:
+        image = ImageModel.get_or_none(id=idx)
+        if image:
+            return model_to_dict(image)
+        return
 
-    def add_bulk(self):
-        pass
-
-    def add_data(self):
-        pass
-
-    def add_data_bulk(self):
-        pass
-
-    def delete(self):
-        pass
-
-    def search(self):
-        pass
-
-    def put_in_index(
+    @db.atomic()
+    def add(
             self,
             extension: str,
             content_type: str,
@@ -54,71 +46,63 @@ class SearchEngine:
         image_dir.mkdir(exist_ok=True)
         image_path = Path(image_dir, str(uuid4())).with_suffix(f'.{extension}')
 
-        with open(image_path, 'wb') as f:
-            copyfileobj(image_obj, f)
-
+        # get vector from image
         vector = self.image_to_vec.get_vector(image_obj)
+        image_obj.seek(0)
 
-        db_image = ImageModel(
+        # save in db
+        image = ImageModel.create(
             name=image_name,
             content_type=content_type,
             path=image_path.as_posix(),
             vector=vector.tolist(),
         )
-        vector.resize((1, vector.size))
-        self.index.add_vector(vector, db_image.id)
-        return db_image.id
+        image.save()
 
-    def remove_from_index(self, db, idx: int) -> [int, None]:
-        # TODO: add atomic
-        db_image = db.query(ImageModel).filter(ImageModel.id == idx).first()
-        if db_image:
-            Path(db_image.path).unlink()
-            self.index.delete_vector(idx)
-            db.delete(db_image)
-            db.commit()
-            return db_image.id
-        return
+        # save in fs
+        with open(image_path, 'wb') as f:
+            copyfileobj(image_obj, f)
 
-    def delete_index(self, db):
-        # TODO: add atomic
-        num_rows_deleted = db.query(ImageModel).delete()
-        db.commit()
-        for directory in self.files_dir.iterdir():
-            rmtree(directory)
+        return image.id
 
-        return num_rows_deleted
+    def add_bulk(self):
+        pass
 
-    @staticmethod
-    def get_all_images_data(db) -> List[Dict]:
-        result = [
-            {
-                'id': image.id,
-                'name': image.name,
-                'data': image.data,
-            }
-            for image in db.query(ImageModel).all()
-        ]
-        return result
-
-    @staticmethod
-    def get_image_data(db, idx: int) -> [Dict, None]:
-        image = db.query(ImageModel).filter(ImageModel.id == idx).first()
-        if image:
-            return {
-                'id': image.id,
-                'name': image.name,
-                'data': image.data,
-                'vector': image.vector,
-                'path': image.path,
-                'content_type': image.content_type
-            }
-        else:
+    def get_data(self, idx) -> [dict, None]:
+        image = ImageModel.get_or_none(id=idx)
+        if image is None:
             return
+        return model_to_dict(image)
+
+    def get_data_query(self, query):
+
+        ImageModel.select().where(ImageModel.data[''])
+
+    def add_data(self, idx: int, data: dict) -> [int, None]:
+        image = ImageModel.get_or_none(id=idx)
+        if image is None:
+            return
+        image.data = data
+        image.save()
+        return image.id
+
+    def add_data_bulk(self):
+        pass
+
+    @db.atomic()
+    def delete(self, idx: int) -> [int, None]:
+        image = ImageModel.get_or_none(id=idx)
+        if image is None:
+            return
+        ImageModel.delete().where(ImageModel.id == idx).execute()
+        os.remove(image.path)
+        return image.id
+
+    def delete_query(self):
+        pass
 
     def search(
             self,
-            db,
             k: int,
             image_obj: BinaryIO
     ) -> [List[Dict], None]:
