@@ -3,7 +3,6 @@ from fastapi.responses import FileResponse
 
 from core import se
 from app.utils import GeneralResponse
-from app.database.engine import Session, get_db
 from core.utils import get_content_type
 from settings.config import Config
 
@@ -49,7 +48,6 @@ def add_image(
 def search_image(
     k: int,
     image: UploadFile = File(...),
-    db: Session = Depends(get_db),
 ):
     if se.is_indexing:
         raise HTTPException(status_code=400, detail='indexing in progress')
@@ -78,7 +76,6 @@ def delete_image(
 
 @image_router.delete('/all/records')
 def delete_all_images(
-    db: Session = Depends(get_db)
 ):
     if se.is_indexing:
         raise HTTPException(status_code=400, detail='indexing in progress')

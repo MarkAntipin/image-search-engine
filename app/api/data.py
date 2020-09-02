@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from core import se
 from app.database.models import Image as ImageModel
 from app.utils import GeneralResponse
-from app.database.engine import Session, get_db
 
 
 data_router = APIRouter()
@@ -17,7 +16,6 @@ class AddData(BaseModel):
 @data_router.get('/{id}')
 def get_data(
     id: int,
-    db: Session = Depends(get_db)
 ):
     result = se.get_image_data(db=db, idx=id)
     if result is None:
@@ -29,7 +27,6 @@ def get_data(
 def add_data(
     id: int,
     data: AddData,
-    db: Session = Depends(get_db)
 ):
     db_image = db.query(ImageModel).filter(ImageModel.id == id).first()
     if db_image is None:

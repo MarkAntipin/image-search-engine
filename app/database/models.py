@@ -1,24 +1,25 @@
 from datetime import datetime as dt
 
-from sqlalchemy import (
-    Column, Integer, Float, String, JSON, DateTime
+from peewee import (
+    PostgresqlDatabase, AutoField, CharField, IntegerField,
+    DateTimeField, Model
 )
-from sqlalchemy.dialects.postgresql import ARRAY
+from playhouse.postgres_ext import JSONField, ArrayField
 
-from .engine import Base, engine
+from settings.config import Config
 
-
-class Image(Base):
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    content_type = Column(String)
-    path = Column(String)
-    data = Column(JSON)
-    vector = Column(ARRAY(Float))
-
-    created_at = Column(DateTime, default=dt.utcnow)
-
-    __tablename__ = 'images'
+db = PostgresqlDatabase(**Config.PG_CONFIG)
 
 
-Base.metadata.create_all(bind=engine)
+class Image(Model):
+    id = AutoField(primary_key=True)
+    name = CharField(max_length=128)
+    content_type = CharField(max_length=128)
+    path = CharField(max_length=255)
+    data = JSONField()
+    vector = ArrayField(IntegerField, dimensions=1)
+
+    created_at = DateTimeField(default=dt.utcnow)
+
+    class Meta:
+        database = db
