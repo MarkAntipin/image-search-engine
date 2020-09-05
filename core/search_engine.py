@@ -16,8 +16,8 @@ class SearchEngine:
     def __init__(
             self,
             layer: str = 'default',
-            model: str = 'alexnet',
-            dim: int = 4096,
+            model: str = 'resnet-18',
+            dim: int = 512,
     ):
         self.image_to_vec = Img2Vec(
             layer=layer,
@@ -28,7 +28,13 @@ class SearchEngine:
         self.files_dir.mkdir(exist_ok=True)
         self.index = None
 
-    def get(self, idx: int) -> [dict, None]:
+    def __make_image_dir(self):
+        image_dir = Path(self.files_dir, dt.now().strftime("%Y-%m-%d"))
+        image_dir.mkdir(exist_ok=True)
+        return image_dir
+
+    @staticmethod
+    def get(idx: int) -> [dict, None]:
         image = ImageModel.get_or_none(id=idx)
         if image:
             return model_to_dict(image)
@@ -42,13 +48,11 @@ class SearchEngine:
             image_obj: BinaryIO,
             image_name: Union[str, Path] = None,
     ) -> int:
-        image_dir = Path(self.files_dir, dt.now().strftime("%Y-%m-%d"))
-        image_dir.mkdir(exist_ok=True)
+        image_dir = self.__make_image_dir()
         image_path = Path(image_dir, str(uuid4())).with_suffix(f'.{extension}')
 
         # get vector from image
         vector = self.image_to_vec.get_vector(image_obj)
-        image_obj.seek(0)
 
         # save in db
         image = ImageModel.create(
@@ -65,20 +69,32 @@ class SearchEngine:
 
         return image.id
 
-    def add_bulk(self):
+    def add_bulk(self, images_data: dict) -> List[int]:
+        image_dir = self.__make_image_dir()
+
+        for image_data in images_data:
+            extension = image_data.pop('extension')
+            image_data.updata({
+                'path': Path(image_dir, str(uuid4())).with_suffix(f'.{extension}')
+            })
         pass
 
-    def get_data(self, idx) -> [dict, None]:
+
+
+    @staticmethod
+    def get_data(idx) -> [dict, None]:
         image = ImageModel.get_or_none(id=idx)
         if image is None:
             return
         return model_to_dict(image)
 
-    def get_data_query(self, query):
+    @staticmethod
+    def get_data_query(query):
+        res = ImageModel.get_by_query(query)
+        return res
 
-        ImageModel.select().where(ImageModel.data[''])
-
-    def add_data(self, idx: int, data: dict) -> [int, None]:
+    @staticmethod
+    def add_data(idx: int, data: dict) -> [int, None]:
         image = ImageModel.get_or_none(id=idx)
         if image is None:
             return
@@ -104,6 +120,7 @@ class SearchEngine:
     def search(
             self,
             k: int,
-            image_obj: BinaryIO
+            image_obj: BinaryIO,
+            query: dict = None
     ) -> [List[Dict], None]:
         pass

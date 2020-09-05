@@ -1,5 +1,6 @@
+from typing import Dict
 from pydantic import BaseModel
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException
 
 from core import se
 from app.utils import GeneralResponse
@@ -21,10 +22,8 @@ def get_data(id: int):
 
 
 @data_router.get('/query')
-def get_data_query(query):
-    result = se.get_data_query(idx=id)
-    if result is None:
-        raise HTTPException(status_code=404, detail=f'no such image with id: {id}')
+def get_data_query(query: dict):
+    result = se.get_data_query(query=query)
     return GeneralResponse(result=result)
 
 
@@ -34,6 +33,16 @@ def add_data(
     data: dict,
 ):
     image_id = se.add_data(idx=id, data=data)
+    if image_id is None:
+        raise HTTPException(status_code=404, detail=f'no such image with id: {id}')
+    return GeneralResponse(result=id, message='saved', code=201)
+
+
+@data_router.post('/bulk')
+def add_data(
+    data: Dict[int, dict],
+):
+    image_id = se.add_data_bulk(idx=id, data=data)
     if image_id is None:
         raise HTTPException(status_code=404, detail=f'no such image with id: {id}')
     return GeneralResponse(result=id, message='saved', code=201)

@@ -1,4 +1,6 @@
-from fastapi import APIRouter, File, UploadFile, Depends, HTTPException
+from typing import List
+
+from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 
 from core import se
@@ -31,7 +33,7 @@ def delete_image(id: int,):
     return GeneralResponse(result=image_id, message='deleted')
 
 
-@image_router.post('/add')
+@image_router.post('')
 def add_image(
     image: UploadFile = File(...),
 ):
@@ -49,28 +51,42 @@ def add_image(
     return GeneralResponse(result=image_id, message='saved', code=201)
 
 
+@image_router.post('/bulk')
+def add_image_bulk(
+    images: List[UploadFile] = File(...),
+):
+    images_data = []
+    for image in images:
+        image_obj = image.file
+        image_name = image.filename
+        content_type, extension = get_content_type(image_obj, image_name)
+        if content_type not in Config.ALLOWED_CONTENT_TYPES:
+            raise HTTPException(
+                status_code=400, detail=f'not allowed content type {content_type} for image: {image_name}'
+            )
+        images_data.append({
+            'content_type': content_type,
+            'extension': extension,
+            'image_name': image_name,
+            'image_obj': image_obj
+        })
+
+    image_ids = se.add_bulk(images_data=images_data)
+    return GeneralResponse(result=image_ids, message='saved', code=201)
+
+
 @image_router.post('/search')
 def search_image(
     k: int,
-    image: UploadFile = File(...),
+    query: dict = None,
+    image: UploadFile = File(...)
 ):
     if se.is_indexing:
         raise HTTPException(status_code=400, detail='indexing in progress')
     image_obj = image.file
     result = se.search(
-        db=db,
         k=k,
-        image_obj=image_obj
+        image_obj=image_obj,
+        query=query
     )
-    if result is None:
-        raise HTTPException(detail=f'not enough images in index for such query', status_code=404)
     return GeneralResponse(result=result)
-
-
-@image_router.delete('/all/records')
-def delete_all_images(
-):
-    if se.is_indexing:
-        raise HTTPException(status_code=400, detail='indexing in progress')
-    num_rows_deleted = se.delete_index(db=db)
-    return GeneralResponse(result=num_rows_deleted, message=f'deleted {num_rows_deleted} records')

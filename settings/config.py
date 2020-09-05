@@ -10,6 +10,7 @@ class Config:
     dotenv.load_dotenv(Path(BASE_DIR, 'settings', 'env'))
 
     FILES_DIR = Path(BASE_DIR, 'files')
+    SQL_FUNCTIONS_DIR = Path(BASE_DIR, 'core', 'utils', 'database')
 
     ALLOWED_CONTENT_TYPES = {
         'image/jpeg',

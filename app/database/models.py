@@ -1,7 +1,8 @@
+from pathlib import Path
 from datetime import datetime as dt
 
 from peewee import (
-    PostgresqlDatabase, AutoField, CharField, IntegerField,
+    PostgresqlDatabase, AutoField, CharField, FloatField,
     DateTimeField, Model
 )
 from playhouse.postgres_ext import JSONField, ArrayField
@@ -17,7 +18,7 @@ class Image(Model):
     content_type = CharField(max_length=128)
     path = CharField(max_length=255)
     data = JSONField(null=True)
-    vector = ArrayField(IntegerField, dimensions=1)
+    vector = ArrayField(FloatField, dimensions=1)
 
     created_at = DateTimeField(default=dt.utcnow)
 
@@ -30,7 +31,7 @@ class Image(Model):
         sql_values = keys + values
 
         sql = (
-                'select name, content_type, path, data from image where '
+                'select id, name, content_type, path, data from image where '
                 + ' and '.join('data ->> %s = %s' for _ in query) + ';'
         )
         cur = db.execute_sql(sql, sql_values)
@@ -39,3 +40,7 @@ class Image(Model):
 
     def search(cls, k: int, query: dict = None):
         pass
+
+    @staticmethod
+    def crate_sql_functions():
+        db.execute_sql(open(Path(Config.SQL_FUNCTIONS_DIR, 'cosine_similarity.sql'), 'r').read())
