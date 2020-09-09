@@ -9,5 +9,5 @@ app = FastAPI(
 app.include_router(prefix='/image', router=image_router, tags=['image'])
 app.include_router(prefix='/data', router=data_router, tags=['data'])
 migrate()
-Image.crate_sql_functions()
+# Image.crate_sql_functions()
 

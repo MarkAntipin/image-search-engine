@@ -51,38 +51,36 @@ def add_image(
     return GeneralResponse(result=image_id, message='saved', code=201)
 
 
-@image_router.post('/bulk')
-def add_image_bulk(
-    images: List[UploadFile] = File(...),
-):
-    images_data = []
-    for image in images:
-        image_obj = image.file
-        image_name = image.filename
-        content_type, extension = get_content_type(image_obj, image_name)
-        if content_type not in Config.ALLOWED_CONTENT_TYPES:
-            raise HTTPException(
-                status_code=400, detail=f'not allowed content type {content_type} for image: {image_name}'
-            )
-        images_data.append({
-            'content_type': content_type,
-            'extension': extension,
-            'image_name': image_name,
-            'image_obj': image_obj
-        })
-
-    image_ids = se.add_bulk(images_data=images_data)
-    return GeneralResponse(result=image_ids, message='saved', code=201)
+# @image_router.post('/bulk')
+# def add_image_bulk(
+#     images: List[UploadFile] = File(...),
+# ):
+#     images_data = []
+#     for image in images:
+#         image_obj = image.file
+#         image_name = image.filename
+#         content_type, extension = get_content_type(image_obj, image_name)
+#         if content_type not in Config.ALLOWED_CONTENT_TYPES:
+#             raise HTTPException(
+#                 status_code=400, detail=f'not allowed content type {content_type} for image: {image_name}'
+#             )
+#         images_data.append({
+#             'content_type': content_type,
+#             'extension': extension,
+#             'image_name': image_name,
+#             'image_obj': image_obj
+#         })
+#
+#     image_ids = se.add_bulk(images_data=images_data)
+#     return GeneralResponse(result=image_ids, message='saved', code=201)
 
 
 @image_router.post('/search')
 def search_image(
-    k: int,
+    k: int = 10,
     query: dict = None,
     image: UploadFile = File(...)
 ):
-    if se.is_indexing:
-        raise HTTPException(status_code=400, detail='indexing in progress')
     image_obj = image.file
     result = se.search(
         k=k,

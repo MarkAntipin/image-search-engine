@@ -1,3 +1,4 @@
 PG_USER='postgres'
 PG_DATABASE='se'
-PG_PASSWORD='postgres'
+PG_PASSWORD='se'
+PG_PORT=54321

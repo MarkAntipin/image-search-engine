@@ -38,11 +38,11 @@ def add_data(
     return GeneralResponse(result=id, message='saved', code=201)
 
 
-@data_router.post('/bulk')
-def add_data(
-    data: Dict[int, dict],
-):
-    image_id = se.add_data_bulk(idx=id, data=data)
-    if image_id is None:
-        raise HTTPException(status_code=404, detail=f'no such image with id: {id}')
-    return GeneralResponse(result=id, message='saved', code=201)
+# @data_router.post('/bulk')
+# def add_data_bulk(
+#     data: Dict[int, dict],
+# ):
+#     image_id = se.add_data_bulk(idx=id, data=data)
+#     if image_id is None:
+#         raise HTTPException(status_code=404, detail=f'no such image with id: {id}')
+#     return GeneralResponse(result=id, message='saved', code=201)

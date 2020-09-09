@@ -70,16 +70,7 @@ class SearchEngine:
         return image.id
 
     def add_bulk(self, images_data: dict) -> List[int]:
-        image_dir = self.__make_image_dir()
-
-        for image_data in images_data:
-            extension = image_data.pop('extension')
-            image_data.updata({
-                'path': Path(image_dir, str(uuid4())).with_suffix(f'.{extension}')
-            })
         pass
-
-
 
     @staticmethod
     def get_data(idx) -> [dict, None]:
@@ -119,8 +110,14 @@ class SearchEngine:
 
     def search(
             self,
-            k: int,
             image_obj: BinaryIO,
+            k: int = 10,
             query: dict = None
     ) -> [List[Dict], None]:
-        pass
+        vector = self.image_to_vec.get_vector(image_obj)
+        res = ImageModel.search(
+            vector=vector.tolist(),
+            query=query,
+            k=k
+        )
+        return res
