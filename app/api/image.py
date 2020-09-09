@@ -1,6 +1,10 @@
+import json
+from json.decoder import JSONDecodeError
 from typing import List
 
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import (
+    APIRouter, File, UploadFile, HTTPException, Depends, Query
+)
 from fastapi.responses import FileResponse
 
 from core import se
@@ -74,13 +78,26 @@ def add_image(
 #     image_ids = se.add_bulk(images_data=images_data)
 #     return GeneralResponse(result=image_ids, message='saved', code=201)
 
+def dict_in_params(query: str = Query(None)):
+    if query is None:
+        return
+    try:
+        query = json.loads(query)
+    except JSONDecodeError:
+        return False
+    if not isinstance(query, dict):
+        return False
+    return query
+
 
 @image_router.post('/search')
 def search_image(
     k: int = 10,
-    query: dict = None,
+    query: dict = Depends(dict_in_params),
     image: UploadFile = File(...)
 ):
+    if query is False:
+        raise HTTPException(detail=f'invalid query: {query}; query must be a dict', status_code=404)
     image_obj = image.file
     result = se.search(
         k=k,

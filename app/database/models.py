@@ -36,14 +36,17 @@ class Image(Model):
 
     @staticmethod
     def compile_sql(
-            query: dict,
             model_fields: set,
+            query: dict = None,
             is_search: bool = False,
             vector: list = None,
             k: int = 10
     ) -> Tuple[str, list]:
         simple_fields = {}
         json_fields = {}
+
+        if query is None:
+            query = dict()
 
         for key, value in query.items():
             if key in model_fields:
@@ -52,11 +55,23 @@ class Image(Model):
                 json_fields[key] = value
 
         if is_search:
-            sql = 'select id, name, content_type, path, data, cube(vector) <-> cube(%s) as dist from image'
-            sql_values = [vector] + list(simple_fields.items()) + list(json_fields.items()) + [k]
+            sql = 'select id, name, content_type, path, data, cube(vector) <-> cube(%s) as dist from image '
+            sql_values = (
+                    [vector]
+                    + list(simple_fields.keys())
+                    + list(simple_fields.values())
+                    + list(json_fields.keys())
+                    + list(json_fields.values())
+                    + [k]
+            )
         else:
             sql = 'select id, name, content_type, path, data from image '
-            sql_values = list(simple_fields.items()) + list(json_fields.items())
+            sql_values = (
+                    list(simple_fields.keys())
+                    + list(simple_fields.values())
+                    + list(json_fields.keys())
+                    + list(json_fields.values())
+            )
 
         if simple_fields or json_fields:
             sql += 'where '
@@ -81,16 +96,13 @@ class Image(Model):
     @classmethod
     def get_by_query(cls, query: dict) -> list:
         model_fields = cls.model_fields()
-        sql, sql_values = cls.compile_sql(query, model_fields)
+        sql, sql_values = cls.compile_sql(model_fields, query)
         return cls.get_query_result(sql, sql_values)
 
     @classmethod
     def search(cls, vector: list, k: int = 10, query: dict = None):
         model_fields = cls.model_fields()
-        sql, sql_values = cls.compile_sql(query, model_fields, is_search=True, vector=vector, k=k)
-
-        print(sql)
-        print(sql_values)
+        sql, sql_values = cls.compile_sql(model_fields, query, is_search=True, vector=vector, k=k)
         return cls.get_query_result(sql, sql_values)
 
     @staticmethod
