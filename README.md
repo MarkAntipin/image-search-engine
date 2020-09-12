@@ -45,8 +45,8 @@ App will be available on 0.0.0.0:8001 in both cases
 ### Api Description
 All handlers are available on 0.0.0.0:8001/docs
 
-#### Image
-* `POST /image/add` add image to database
+#### Add Image
+`POST /image/add` add image to database
 
 Python requests
 ```python
@@ -63,7 +63,8 @@ curl -X POST "http://0.0.0.0:8001/image/add"
  -H "Content-Type: multipart/form-data" -F "image=@{image_path};type=image/jpeg"
 ```
 
-* `GET /image/{id}` download image by id
+#### Get Image
+`GET /image/{id}` download image by id
 
 Python requests
 ```python
@@ -79,7 +80,8 @@ Curl
 curl -X GET "http://0.0.0.0:8001/image/{id}" --output {output_file_name}
 ```
 
-* `DELETE /image/{id}` delete image by id
+#### Delete Image
+`DELETE /image/{id}` delete image by id
 
 Python requests
 ```python
@@ -92,11 +94,12 @@ Curl
 curl -X DELETE "http://0.0.0.0:8001/image/{id}"
 ```
 
-* `POST /image/search?k={k}` search k nearest images
+#### Search Image
+`POST /image/search?k={k}` search k nearest images
 
 Most complex handler. You can search nearest images n all database
 or you can select only specific images (for example only 'Irish terriers')
-For such selects you need to add data to images as json fields (see POST 'data/{id}')
+For such selects you need to add data to images as json fields (see `POST data/{id}`)
 Also you can select images by 'name' or 'path' in the same way.
 For such queries pass valid dict in params
 
@@ -121,9 +124,8 @@ curl -X POST "http://0.0.0.0:8001/image/search?k={k}&query=%7B%22dog_type%22%3A%
 ```
 
 
-
-#### Data
-* `POST /data/{id}` add additional info for image by id
+#### Add Data
+`POST /data/{id}` add additional info for image by id
 
 Pass all image data in json field
 
@@ -142,7 +144,8 @@ curl -X POST "http://0.0.0.0:8001/data/12345"
  -H "Content-Type: application/json" -d "{\"dog_type\":\"Irish_terrier\"}"
 ```
 
-* `GET /data/{id}` get data for image by id (vector and some additional info)
+#### Get Data
+`GET /data/{id}` get data for image by id (vector and some additional info)
 
 Python requests
 ```python
@@ -155,9 +158,10 @@ Curl
 curl -X GET "http://0.0.0.0:8001/data/{id}"
 ```
 
-* `POST /data/query` get data for image by query
+#### Query Data
+`POST /data/query` get data for image by query
 
-You can search for images by querying data (see POST '/image/search')
+You can search for images by querying data (see `POST /image/search`)
 But you need to pass query data in json field
 
 Python requests
