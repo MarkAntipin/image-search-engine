@@ -1,9 +1,13 @@
-from fastapi import APIRouter, File, UploadFile, Depends, HTTPException
+import json
+from json.decoder import JSONDecodeError
+
+from fastapi import (
+    APIRouter, File, UploadFile, HTTPException, Depends, Query
+)
 from fastapi.responses import FileResponse
 
 from core import se
 from app.utils import GeneralResponse
-from app.database.engine import Session, get_db
 from core.utils import get_content_type
 from settings.config import Config
 
@@ -11,11 +15,8 @@ image_router = APIRouter()
 
 
 @image_router.get('/{id}')
-def get_image(
-    id: int,
-    db: Session = Depends(get_db)
-):
-    result = se.get_image_data(db=db, idx=id)
+def get_image(id: int):
+    result = se.get(idx=id)
     if result is None:
         raise HTTPException(detail=f'no such image with id: {id}', status_code=404)
     return FileResponse(
@@ -27,20 +28,24 @@ def get_image(
         })
 
 
-@image_router.post('/add')
+@image_router.delete('/{id}')
+def delete_image(id: int,):
+    image_id = se.delete(idx=id)
+    if image_id is None:
+        raise HTTPException(detail=f'no such image with id: {id}', status_code=404)
+    return GeneralResponse(result=image_id, message='deleted')
+
+
+@image_router.post('')
 def add_image(
     image: UploadFile = File(...),
-    db: Session = Depends(get_db)
 ):
-    if se.is_indexing:
-        raise HTTPException(status_code=400, detail='indexing in progress')
     image_obj = image.file
     image_name = image.filename
     content_type, extension = get_content_type(image_obj, image_name)
     if content_type not in Config.ALLOWED_CONTENT_TYPES:
         raise HTTPException(status_code=400, detail=f'not allowed content type {content_type}')
-    image_id = se.put_in_index(
-        db=db,
+    image_id = se.add(
         content_type=content_type,
         extension=extension,
         image_obj=image_obj,
@@ -49,43 +54,30 @@ def add_image(
     return GeneralResponse(result=image_id, message='saved', code=201)
 
 
+def dict_in_params(query: str = Query(None)):
+    if query is None:
+        return
+    try:
+        query = json.loads(query)
+    except JSONDecodeError:
+        return False
+    if not isinstance(query, dict):
+        return False
+    return query
+
+
 @image_router.post('/search')
 def search_image(
-    k: int,
-    image: UploadFile = File(...),
-    db: Session = Depends(get_db),
+    k: int = 10,
+    query: dict = Depends(dict_in_params),
+    image: UploadFile = File(...)
 ):
-    if se.is_indexing:
-        raise HTTPException(status_code=400, detail='indexing in progress')
+    if query is False:
+        raise HTTPException(detail=f'invalid query: {query}; query must be a dict', status_code=404)
     image_obj = image.file
     result = se.search(
-        db=db,
         k=k,
-        image_obj=image_obj
+        image_obj=image_obj,
+        query=query
     )
-    if result is None:
-        raise HTTPException(detail=f'not enough images in index for such query', status_code=404)
     return GeneralResponse(result=result)
-
-
-@image_router.delete('/{id}')
-def delete_image(
-    id: int,
-    db: Session = Depends(get_db)
-):
-    if se.is_indexing:
-        raise HTTPException(status_code=400, detail='indexing in progress')
-    image_id = se.remove_from_index(db=db, idx=id)
-    if image_id is None:
-        raise HTTPException(detail=f'no such image with id: {id}', status_code=404)
-    return GeneralResponse(result=image_id, message='deleted')
-
-
-@image_router.delete('/all/records')
-def delete_all_images(
-    db: Session = Depends(get_db)
-):
-    if se.is_indexing:
-        raise HTTPException(status_code=400, detail='indexing in progress')
-    num_rows_deleted = se.delete_index(db=db)
-    return GeneralResponse(result=num_rows_deleted, message=f'deleted {num_rows_deleted} records')

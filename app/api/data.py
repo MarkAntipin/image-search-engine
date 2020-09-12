@@ -1,10 +1,9 @@
+from typing import Dict
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from core import se
-from app.database.models import Image as ImageModel
 from app.utils import GeneralResponse
-from app.database.engine import Session, get_db
 
 
 data_router = APIRouter()
@@ -15,25 +14,35 @@ class AddData(BaseModel):
 
 
 @data_router.get('/{id}')
-def get_data(
-    id: int,
-    db: Session = Depends(get_db)
-):
-    result = se.get_image_data(db=db, idx=id)
+def get_data(id: int):
+    result = se.get_data(idx=id)
     if result is None:
         raise HTTPException(status_code=404, detail=f'no such image with id: {id}')
+    return GeneralResponse(result=result)
+
+
+@data_router.post('/query')
+def get_data_query(query: dict):
+    result = se.get_data_query(query=query)
     return GeneralResponse(result=result)
 
 
 @data_router.post('/{id}')
 def add_data(
     id: int,
-    data: AddData,
-    db: Session = Depends(get_db)
+    data: dict,
 ):
-    db_image = db.query(ImageModel).filter(ImageModel.id == id).first()
-    if db_image is None:
+    image_id = se.add_data(idx=id, data=data)
+    if image_id is None:
         raise HTTPException(status_code=404, detail=f'no such image with id: {id}')
-    db_image.data = data.image_data
-    db.commit()
     return GeneralResponse(result=id, message='saved', code=201)
+
+
+# @data_router.post('/bulk')
+# def add_data_bulk(
+#     data: Dict[int, dict],
+# ):
+#     image_id = se.add_data_bulk(idx=id, data=data)
+#     if image_id is None:
+#         raise HTTPException(status_code=404, detail=f'no such image with id: {id}')
+#     return GeneralResponse(result=id, message='saved', code=201)
