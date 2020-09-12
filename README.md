@@ -5,14 +5,18 @@ It is a search similar engine for images.
 ![Alt text](https://raw.githubusercontent.com/MarkAntipin/image-search-engine/master/readme_images/dogs_1.png)
 ![Alt text](https://raw.githubusercontent.com/MarkAntipin/image-search-engine/master/readme_images/dogs_2.png)
 
-This web application allows you to add and remove images from the index while maintaining data consistency.
- When the application starts again, the entire previous index is saved.
+This is a web application allows you to search similar images in database.
 
-### Used technologies
+The basic idea is that you can delete or add images at any time while maintaining data consistency.
+A useful feature is also implemented: search for similar images by request
+(for example, find similar images, but search only among those who are Labradors)
 
-* `hnswlib` - index engine for quick similarity search (https://github.com/nmslib/hnswlib)
-* `postgeSQL` - to store all additional information about the image
+I am currently using:
 * `img2vec_pytorch` - wrapper around Alexnet for image feature extraction (https://github.com/christiansafka/img2vec)
+* `postgeSQL` with `CUBE` extension; vectors are very large, so i can't build index, but postgres allows to query data even in json fields 
+
+In last version i have used `hnswlib` it was faster, but not so flexible as postgres
+(you can check it out on hnsw branch)
 
 
 ### Deployment

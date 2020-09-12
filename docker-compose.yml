@@ -2,7 +2,9 @@ version: '3'
 
 services:
   postgres:
-    image: postgres:12.0-alpine
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     restart: always
@@ -19,9 +21,6 @@ services:
     build: .
     command: ["./tools/run.sh"]
     volumes:
-      - pytorch_model:/root/.cache/torch/checkpoints
-      - ${PWD}/app:/app
-      - ${PWD}/core:/core
       - files_data:/files
     environment:
       PG_HOST: postgres
@@ -39,7 +38,6 @@ services:
 volumes:
   postgres_data:
   files_data:
-  pytorch_model:
 
 networks:
   network-search-engine:

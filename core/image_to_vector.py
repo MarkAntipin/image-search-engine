@@ -1,4 +1,4 @@
-from typing import BinaryIO, List
+from typing import BinaryIO
 
 import numpy as np
 from PIL import Image
@@ -30,11 +30,3 @@ class Img2Vec(Img2VecPytorch):
         image = self._create_pill(img_obj)
         vector = self.get_vec(image)
         return self.__normalize(vector)
-
-    def enrich_with_vectors(self, images_data: dict):
-        # for image_data in images_data:
-        #     image_obj = image_data.pop('image_data')
-        #
-        # images = [self._create_pill(img) for img in img_objects]
-        # return self.get_vec(images)
-        pass
