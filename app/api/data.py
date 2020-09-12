@@ -21,7 +21,7 @@ def get_data(id: int):
     return GeneralResponse(result=result)
 
 
-@data_router.get('/query')
+@data_router.post('/query')
 def get_data_query(query: dict):
     result = se.get_data_query(query=query)
     return GeneralResponse(result=result)

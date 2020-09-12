@@ -109,3 +109,6 @@ class Image(Model):
     def crate_sql_functions():
         db.execute_sql(open(Path(Config.SQL_FUNCTIONS_DIR, 'cosine_similarity.sql'), 'r').read())
 
+    @classmethod
+    def crate_extensions(cls):
+        db.execute_sql('create extension if not exists cube;')

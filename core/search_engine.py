@@ -77,7 +77,15 @@ class SearchEngine:
         image = ImageModel.get_or_none(id=idx)
         if image is None:
             return
-        return model_to_dict(image)
+        result = {
+            'id': image.id,
+            'name': image.name,
+            'content_type': image.content_type,
+            'path': image.path,
+            'data': image.data,
+            'vector': image.vector
+        }
+        return result
 
     @staticmethod
     def get_data_query(query):
