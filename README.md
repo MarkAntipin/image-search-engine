@@ -46,20 +46,20 @@ App will be available on 0.0.0.0:8001 in both cases
 All handlers are available on 0.0.0.0:8001/docs
 
 #### Add Image
-`POST /image/add` add image to database
+`POST /image` add image to database
 
 Python requests
 ```python
 import requests
 
 r = requests.post(
-    url='http://0.0.0.0:8001/image/add',
+    url='http://0.0.0.0:8001/image',
     files={'image': open('image_path', 'rb')}
 )
 ```
 Curl
 ```curl
-curl -X POST "http://0.0.0.0:8001/image/add"
+curl -X POST "http://0.0.0.0:8001/image"
  -H "Content-Type: multipart/form-data" -F "image=@{image_path};type=image/jpeg"
 ```
 
@@ -134,13 +134,13 @@ Python requests
 import requests
 
 r = requests.post(
-    url='http://0.0.0.0:8001/image/{id}',
+    url='http://0.0.0.0:8001/data/{id}',
     json={'dog_type': 'Irish_terrier'}
 )
 ```
 Curl
 ```curl
-curl -X POST "http://0.0.0.0:8001/data/12345"
+curl -X POST "http://0.0.0.0:8001/data/{id}"
  -H "Content-Type: application/json" -d "{\"dog_type\":\"Irish_terrier\"}"
 ```
 
@@ -151,7 +151,7 @@ Python requests
 ```python
 import requests
 
-r = requests.get(url='http://0.0.0.0:8001/image/{id}')
+r = requests.get(url='http://0.0.0.0:8001/data/{id}')
 ```
 Curl
 ```curl
@@ -169,7 +169,7 @@ Python requests
 import requests
 
 r = requests.post(
-    url='http://0.0.0.0:8001/image/{id}',
+    url='http://0.0.0.0:8001/data/query',
     json={'dog_type': 'Irish_terrier'}
 )
 ```
