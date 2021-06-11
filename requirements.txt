@@ -13,7 +13,7 @@ img2vec-pytorch==0.2.5
 numpy==1.19.1
 peewee==3.13.3
 peewee-db-evolve==3.7.6
-Pillow==8.1.1
+Pillow==8.2.0
 psycopg2-binary==2.8.6
 pydantic==1.6.2
 python-dotenv==0.14.0
